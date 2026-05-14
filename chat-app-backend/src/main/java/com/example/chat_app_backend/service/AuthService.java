@@ -2,6 +2,8 @@ package com.example.chat_app_backend.service;
 
 import com.example.chat_app_backend.dto.AuthRequest;
 import com.example.chat_app_backend.dto.AuthResponse;
+import com.example.chat_app_backend.dto.RegisterRequest;
+import com.example.chat_app_backend.dto.UserDto;
 import com.example.chat_app_backend.model.User;
 import com.example.chat_app_backend.repository.UserRepository;
 import com.example.chat_app_backend.security.JwtUtils;
@@ -23,7 +25,7 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
 
-    public AuthResponse register(AuthRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username is already taken");
         }
@@ -31,7 +33,7 @@ public class AuthService {
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .email(request.getUsername() + "@example.com") // Placeholder
+                .email(request.getEmail())
                 .build();
 
         userRepository.save(user);
@@ -41,7 +43,11 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .token(token)
-                .username(user.getUsername())
+                .user(UserDto.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .build())
                 .build();
     }
 
@@ -50,12 +56,19 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         String token = jwtUtils.generateToken(userDetails);
 
         return AuthResponse.builder()
                 .token(token)
-                .username(request.getUsername())
+                .user(UserDto.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .build())
                 .build();
     }
 }
