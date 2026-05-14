@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface MessageDeliveryRepository extends JpaRepository<MessageDelivery, UUID> {
     List<MessageDelivery> findByUserIdAndStatusNot(UUID userId, DeliveryStatus status);
+    List<MessageDelivery> findByMessageRoomIdAndUserIdAndStatusNot(UUID roomId, UUID userId, DeliveryStatus status);
 }
