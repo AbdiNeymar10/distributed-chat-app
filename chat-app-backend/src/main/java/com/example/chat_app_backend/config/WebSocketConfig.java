@@ -1,19 +1,36 @@
 package com.example.chat_app_backend.config;
 
+import com.example.chat_app_backend.security.CustomUserDetailsService;
+import com.example.chat_app_backend.security.JwtUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final JwtUtils jwtUtils;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Use an external broker like RabbitMQ in production.
-        // For simple integration, using simple in-memory broker, but it can be changed to use RabbitMQ relay.
         config.enableSimpleBroker("/topic", "/queue");
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
@@ -24,5 +41,40 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    List<String> authorization = accessor.getNativeHeader("Authorization");
+                    if (authorization != null && !authorization.isEmpty()) {
+                        String bearerToken = authorization.get(0);
+                        if (bearerToken.startsWith("Bearer ")) {
+                            String jwt = bearerToken.substring(7);
+                            try {
+                                String username = jwtUtils.extractUsername(jwt);
+                                if (username != null) {
+                                    UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+                                    if (jwtUtils.validateToken(jwt, userDetails)) {
+                                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                                userDetails, null, userDetails.getAuthorities());
+                                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                                        accessor.setUser(authentication);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                // log error, authentication failed
+                                System.err.println("WebSocket auth error: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+                return message;
+            }
+        });
     }
 }
