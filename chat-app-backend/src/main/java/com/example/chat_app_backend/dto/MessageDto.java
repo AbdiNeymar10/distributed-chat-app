@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageDto {
-    private String senderId;
-    private String recipientId;
+    private String senderId; // Should be username or UUID string, we can keep as String
+    private String roomId;
     private String content;
     private LocalDateTime timestamp;
 }
