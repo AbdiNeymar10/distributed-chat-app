@@ -34,6 +34,7 @@ public class Room {
         joinColumns = @JoinColumn(name = "room_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @Builder.Default
     private Set<User> members = new HashSet<>();
 
     @Column(name = "created_at", updatable = false)
