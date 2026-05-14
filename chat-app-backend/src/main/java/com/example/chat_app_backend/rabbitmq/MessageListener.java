@@ -15,7 +15,7 @@ public class MessageListener {
 
     @RabbitListener(queues = RabbitMQConfig.CHAT_QUEUE)
     public void receiveMessage(MessageDto messageDto) {
-        // Broadcast to the specific user over WebSocket
-        messagingTemplate.convertAndSendToUser(messageDto.getRecipientId(), "/queue/messages", messageDto);
+        // Broadcast to the specific room over WebSocket
+        messagingTemplate.convertAndSend("/topic/room." + messageDto.getRoomId(), messageDto);
     }
 }

@@ -13,6 +13,6 @@ public class MessagePublisher {
     private final RabbitTemplate rabbitTemplate;
 
     public void sendMessage(MessageDto messageDto) {
-        rabbitTemplate.convertAndSend(RabbitMQConfig.CHAT_EXCHANGE, "chat.routing." + messageDto.getRecipientId(), messageDto);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.CHAT_EXCHANGE, "chat.routing." + messageDto.getRoomId(), messageDto);
     }
 }
