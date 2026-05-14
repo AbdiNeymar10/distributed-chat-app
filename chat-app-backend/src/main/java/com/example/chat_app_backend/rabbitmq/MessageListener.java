@@ -18,4 +18,14 @@ public class MessageListener {
         // Broadcast to the specific room over WebSocket
         messagingTemplate.convertAndSend("/topic/room." + messageDto.getRoomId(), messageDto);
     }
+
+    @RabbitListener(queues = RabbitMQConfig.TYPING_QUEUE)
+    public void receiveTypingIndicator(com.example.chat_app_backend.dto.TypingDto typingDto) {
+        messagingTemplate.convertAndSend("/topic/room." + typingDto.getRoomId() + ".typing", typingDto);
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.PRESENCE_QUEUE)
+    public void receivePresenceEvent(com.example.chat_app_backend.dto.PresenceDto presenceDto) {
+        messagingTemplate.convertAndSend("/topic/online-users", presenceDto);
+    }
 }
