@@ -15,28 +15,28 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String CHAT_EXCHANGE = "chat.exchange";
-    public static final String CHAT_QUEUE = "chat.queue";
+    public static final String CHAT_QUEUE = "chat.queue.durable";
     public static final String CHAT_ROUTING_KEY = "chat.routing.#";
 
-    public static final String TYPING_QUEUE = "typing.queue";
+    public static final String TYPING_QUEUE = "typing.queue.durable";
     public static final String TYPING_ROUTING_KEY = "typing.routing.#";
 
-    public static final String PRESENCE_QUEUE = "presence.queue";
+    public static final String PRESENCE_QUEUE = "presence.queue.durable";
     public static final String PRESENCE_ROUTING_KEY = "presence.routing.#";
 
     @Bean
     public Queue chatQueue() {
-        return new Queue(CHAT_QUEUE, false);
+        return new Queue(CHAT_QUEUE, true);
     }
 
     @Bean
     public Queue typingQueue() {
-        return new Queue(TYPING_QUEUE, false);
+        return new Queue(TYPING_QUEUE, true);
     }
 
     @Bean
     public Queue presenceQueue() {
-        return new Queue(PRESENCE_QUEUE, false);
+        return new Queue(PRESENCE_QUEUE, true);
     }
 
     @Bean
