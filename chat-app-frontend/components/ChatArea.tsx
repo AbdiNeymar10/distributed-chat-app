@@ -3,51 +3,23 @@
 import { motion } from "framer-motion";
 import { MessageInput } from "./MessageInput";
 import { Menu, Users } from "lucide-react";
+import { useChatStore } from "@/store/chatStore";
+import { useAuthStore } from "@/store/authStore";
+import { useEffect, useRef } from "react";
 
-export function ChatArea({ onOpenSidebar, onOpenUsers }: { onOpenSidebar: () => void; onOpenUsers: () => void }) {
-  // Mock messages
-  const messages = [
-    {
-      id: 1,
-      user: "Alice",
-      avatar: "from-indigo-500 to-purple-600",
-      time: "Today at 2:30 PM",
-      content: "Hey everyone! How's the new project coming along?",
-      isMe: false
-    },
-    {
-      id: 2,
-      user: "Bob",
-      avatar: "from-rose-400 to-orange-500",
-      time: "Today at 2:32 PM",
-      content: "It's going great! Just finished the animated sidebar.",
-      isMe: false
-    },
-    {
-      id: 3,
-      user: "You",
-      avatar: "from-fuchsia-500 to-pink-500",
-      time: "Today at 2:35 PM",
-      content: "That sounds awesome! I'm working on the chat area glassmorphism right now. It looks super futuristic.",
-      isMe: true
-    },
-    {
-      id: 4,
-      user: "Charlie",
-      avatar: "from-blue-500 to-cyan-500",
-      time: "Today at 2:38 PM",
-      content: "Can't wait to see it. Did you add Framer Motion for the transitions?",
-      isMe: false
-    },
-    {
-      id: 5,
-      user: "You",
-      avatar: "from-fuchsia-500 to-pink-500",
-      time: "Today at 2:40 PM",
-      content: "Yes! The sidebar slides in beautifully on mobile.",
-      isMe: true
-    }
-  ];
+export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { onOpenSidebar: () => void; onOpenUsers: () => void; roomId?: string }) {
+  const { messages, typingUsers } = useChatStore();
+  const { user } = useAuthStore();
+  const roomMessages = messages[roomId] || [];
+  const roomTypingUsers = typingUsers[roomId] || [];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Filter out current user from typing indicators
+  const otherTypingUsers = roomTypingUsers.filter(u => u !== user?.username);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [roomMessages, otherTypingUsers]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-950/80 relative">
@@ -93,32 +65,59 @@ export function ChatArea({ onOpenSidebar, onOpenUsers }: { onOpenSidebar: () => 
           <p className="text-zinc-400">This is the start of the #general channel.</p>
         </div>
 
-        {messages.map((msg, idx) => (
+        {roomMessages.length === 0 && (
+          <div className="text-zinc-500 italic text-center mt-10">No messages yet. Be the first to say hi!</div>
+        )}
+
+        {roomMessages.map((msg, idx) => {
+          const isMe = msg.senderId === user?.username;
+          return (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className={`flex group ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+            >
+              <div className={`flex-shrink-0 ${isMe ? 'ml-4' : 'mr-4'}`}>
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
+                  {msg.senderId.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
+                <div className={`flex items-baseline mb-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <span className="font-semibold text-zinc-200">{msg.senderId}</span>
+                  <span className={`text-xs text-zinc-500 ${isMe ? 'mr-2' : 'ml-2'}`}>{msg.timestamp || 'Just now'}</span>
+                </div>
+                <div className={`px-4 py-3 rounded-2xl ${
+                  isMe 
+                    ? 'bg-indigo-600 text-white rounded-tr-sm shadow-[0_4px_15px_rgba(79,70,229,0.2)]' 
+                    : 'bg-zinc-800/80 text-zinc-200 rounded-tl-sm border border-white/5 backdrop-blur-md'
+                }`}>
+                  {msg.content}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+
+        {/* Typing Indicator */}
+        {otherTypingUsers.length > 0 && (
           <motion.div 
-            key={msg.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className={`flex group ${msg.isMe ? 'flex-row-reverse' : 'flex-row'}`}
+            className="flex items-center text-zinc-500 text-sm ml-14"
           >
-            <div className={`flex-shrink-0 ${msg.isMe ? 'ml-4' : 'mr-4'}`}>
-              <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${msg.avatar} shadow-lg`} />
+            <div className="flex space-x-1 mr-2">
+              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
             </div>
-            <div className={`flex flex-col max-w-[75%] ${msg.isMe ? 'items-end' : 'items-start'}`}>
-              <div className={`flex items-baseline mb-1 ${msg.isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                <span className="font-semibold text-zinc-200">{msg.user}</span>
-                <span className={`text-xs text-zinc-500 ${msg.isMe ? 'mr-2' : 'ml-2'}`}>{msg.time}</span>
-              </div>
-              <div className={`px-4 py-3 rounded-2xl ${
-                msg.isMe 
-                  ? 'bg-indigo-600 text-white rounded-tr-sm shadow-[0_4px_15px_rgba(79,70,229,0.2)]' 
-                  : 'bg-zinc-800/80 text-zinc-200 rounded-tl-sm border border-white/5 backdrop-blur-md'
-              }`}>
-                {msg.content}
-              </div>
-            </div>
+            {otherTypingUsers.join(', ')} {otherTypingUsers.length === 1 ? 'is' : 'are'} typing...
           </motion.div>
-        ))}
+        )}
+        
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}

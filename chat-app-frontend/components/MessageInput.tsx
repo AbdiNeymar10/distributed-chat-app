@@ -2,16 +2,51 @@
 
 import { motion } from "framer-motion";
 import { Send, Paperclip, Smile, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useChatStore } from "@/store/chatStore";
 
-export function MessageInput() {
+export function MessageInput({ roomId = "general" }: { roomId?: string }) {
   const [message, setMessage] = useState("");
+  const { sendMessage, sendTyping } = useChatStore();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+    
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    } else {
+      // Send typing = true only on first keystroke
+      sendTyping(roomId, true);
+    }
+
+    // Set new timeout to clear typing status
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTyping(roomId, false);
+      typingTimeoutRef.current = null;
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        sendTyping(roomId, false);
+      }
+    };
+  }, [roomId, sendTyping]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
-      // In a real app, send the message here
+      sendMessage(roomId, message.trim());
       setMessage("");
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+      sendTyping(roomId, false);
     }
   };
 
@@ -31,8 +66,8 @@ export function MessageInput() {
         <input
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Message #general..."
+          onChange={handleTyping}
+          placeholder={`Message #${roomId}...`}
           className="flex-1 bg-transparent border-none outline-none py-3 px-2 text-zinc-100 placeholder:text-zinc-600 font-medium"
         />
 

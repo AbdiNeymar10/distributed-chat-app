@@ -2,29 +2,20 @@
 
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
+import { useChatStore } from "@/store/chatStore";
 
 export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  // Mock data for online users d
+  const { onlineUsers } = useChatStore();
+
   const categories = [
     {
       title: "Online",
-      users: [
-        { name: "David", role: "Admin", avatar: "from-purple-500 to-indigo-500", status: "bg-emerald-500" },
-        { name: "Emma", role: "Member", avatar: "from-pink-500 to-rose-500", status: "bg-emerald-500" },
-      ]
-    },
-    {
-      title: "Away",
-      users: [
-        { name: "Frank", role: "Member", avatar: "from-amber-400 to-orange-500", status: "bg-amber-500" },
-      ]
-    },
-    {
-      title: "Offline",
-      users: [
-        { name: "Grace", role: "Moderator", avatar: "from-teal-400 to-emerald-500", status: "bg-zinc-600" },
-        { name: "Henry", role: "Member", avatar: "from-blue-400 to-indigo-500", status: "bg-zinc-600" },
-      ]
+      users: onlineUsers.map((username) => ({
+        name: username,
+        role: "Member",
+        avatar: "from-purple-500 to-indigo-500", // Generic avatar for now
+        status: "bg-emerald-500"
+      }))
     }
   ];
 
