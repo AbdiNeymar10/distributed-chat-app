@@ -27,4 +27,16 @@ public class ChatController {
         // Publish to RabbitMQ exchange for distributed routing
         messagePublisher.sendMessage(savedMessage);
     }
+
+    @MessageMapping("/typing")
+    public void processTypingIndicator(@Payload com.example.chat_app_backend.dto.TypingDto typingDto) {
+        messagePublisher.sendTypingIndicator(typingDto);
+    }
+
+    @MessageMapping("/read")
+    public void processReadReceipt(@Payload com.example.chat_app_backend.dto.MessageAckDto ackDto, java.security.Principal principal) {
+        if (principal != null) {
+            messageService.markAsRead(ackDto.getRoomId(), principal.getName());
+        }
+    }
 }
