@@ -81,15 +81,17 @@ public class MessageService {
         }
 
         return MessageDto.builder()
+                .id(savedMessage.getId().toString())
                 .senderId(savedMessage.getSender().getUsername())
                 .roomId(messageDto.getRoomId())
                 .content(savedMessage.getContent())
                 .timestamp(savedMessage.getCreatedAt())
+                .status(DeliveryStatus.SENT.name())
                 .build();
     }
 
     @Transactional
-    public void markAsRead(String roomIdStr, String username) {
+    public java.util.List<MessageDelivery> markAsRead(String roomIdStr, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -115,6 +117,84 @@ public class MessageService {
             delivery.setReadAt(now);
         }
 
-        messageDeliveryRepository.saveAll(unreadDeliveries);
+        return messageDeliveryRepository.saveAll(unreadDeliveries);
+    }
+
+    @Transactional
+    public java.util.List<MessageDelivery> markAsDelivered(String roomIdStr, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Room room;
+        try {
+            UUID roomId = UUID.fromString(roomIdStr);
+            room = roomRepository.findById(roomId)
+                    .orElseThrow(() -> new RuntimeException("Room not found"));
+        } catch (IllegalArgumentException e) {
+            room = roomRepository.findByName(roomIdStr)
+                    .orElseThrow(() -> new RuntimeException("Room not found"));
+        }
+
+        java.util.List<MessageDelivery> undelivered = messageDeliveryRepository
+                .findByMessageRoomIdAndUserIdAndStatusNot(room.getId(), user.getId(), DeliveryStatus.READ);
+        
+        java.util.List<MessageDelivery> toUpdate = new java.util.ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (MessageDelivery delivery : undelivered) {
+            if (delivery.getStatus() == DeliveryStatus.SENT) {
+                delivery.setStatus(DeliveryStatus.DELIVERED);
+                delivery.setDeliveredAt(now);
+                toUpdate.add(delivery);
+            }
+        }
+
+        return messageDeliveryRepository.saveAll(toUpdate);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<MessageDto> getRoomMessages(String roomIdStr, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Room room;
+        try {
+            UUID roomId = UUID.fromString(roomIdStr);
+            room = roomRepository.findById(roomId)
+                    .orElseThrow(() -> new RuntimeException("Room not found"));
+        } catch (IllegalArgumentException e) {
+            room = roomRepository.findByName(roomIdStr)
+                    .orElseThrow(() -> new RuntimeException("Room not found"));
+        }
+
+        java.util.List<Message> messages = messageRepository.findTop50ByRoomIdOrderByCreatedAtDesc(room.getId());
+        java.util.Collections.reverse(messages);
+
+        return messages.stream().map(message -> {
+            // Find status for the requesting user
+            String status = DeliveryStatus.SENT.name();
+            if (message.getSender().equals(user)) {
+                // If I am the sender, I should see if it was delivered/read by anyone?
+                // For a group chat, we can consider it read if ALL members read it, 
+                // but for simplicity we can just return SENT unless we aggregate.
+                // Let's just return SENT for now.
+            } else {
+                // Find delivery for the requesting user
+                for (MessageDelivery delivery : message.getDeliveries()) {
+                    if (delivery.getUser().equals(user)) {
+                        status = delivery.getStatus().name();
+                        break;
+                    }
+                }
+            }
+
+            return MessageDto.builder()
+                    .id(message.getId().toString())
+                    .senderId(message.getSender().getUsername())
+                    .roomId(roomIdStr)
+                    .content(message.getContent())
+                    .timestamp(message.getCreatedAt())
+                    .status(status)
+                    .build();
+        }).toList();
     }
 }

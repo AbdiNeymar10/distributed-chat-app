@@ -36,7 +36,32 @@ public class ChatController {
     @MessageMapping("/read")
     public void processReadReceipt(@Payload com.example.chat_app_backend.dto.MessageAckDto ackDto, java.security.Principal principal) {
         if (principal != null) {
-            messageService.markAsRead(ackDto.getRoomId(), principal.getName());
+            java.util.List<com.example.chat_app_backend.model.MessageDelivery> deliveries = messageService.markAsRead(ackDto.getRoomId(), principal.getName());
+            for (com.example.chat_app_backend.model.MessageDelivery delivery : deliveries) {
+                com.example.chat_app_backend.dto.MessageReceiptDto receiptDto = com.example.chat_app_backend.dto.MessageReceiptDto.builder()
+                        .messageId(delivery.getMessage().getId().toString())
+                        .roomId(ackDto.getRoomId())
+                        .userId(delivery.getUser().getId().toString())
+                        .status(com.example.chat_app_backend.model.DeliveryStatus.READ)
+                        .build();
+                messagePublisher.sendReceipt(receiptDto);
+            }
+        }
+    }
+
+    @MessageMapping("/delivered")
+    public void processDeliveryReceipt(@Payload com.example.chat_app_backend.dto.MessageAckDto ackDto, java.security.Principal principal) {
+        if (principal != null) {
+            java.util.List<com.example.chat_app_backend.model.MessageDelivery> deliveries = messageService.markAsDelivered(ackDto.getRoomId(), principal.getName());
+            for (com.example.chat_app_backend.model.MessageDelivery delivery : deliveries) {
+                com.example.chat_app_backend.dto.MessageReceiptDto receiptDto = com.example.chat_app_backend.dto.MessageReceiptDto.builder()
+                        .messageId(delivery.getMessage().getId().toString())
+                        .roomId(ackDto.getRoomId())
+                        .userId(delivery.getUser().getId().toString())
+                        .status(com.example.chat_app_backend.model.DeliveryStatus.DELIVERED)
+                        .build();
+                messagePublisher.sendReceipt(receiptDto);
+            }
         }
     }
 }
