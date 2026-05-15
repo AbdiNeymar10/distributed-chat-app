@@ -32,4 +32,8 @@ public class MessagePublisher {
     public void sendPresenceEvent(com.example.chat_app_backend.dto.PresenceDto presenceDto) {
         rabbitTemplate.convertAndSend(RabbitMQConfig.CHAT_EXCHANGE, "presence.routing.all", presenceDto, persistentPostProcessor);
     }
+
+    public void sendReceipt(com.example.chat_app_backend.dto.MessageReceiptDto receiptDto) {
+        rabbitTemplate.convertAndSend(RabbitMQConfig.CHAT_EXCHANGE, "receipt.routing." + receiptDto.getRoomId(), receiptDto, persistentPostProcessor);
+    }
 }

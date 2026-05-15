@@ -28,4 +28,9 @@ public class MessageListener {
     public void receivePresenceEvent(com.example.chat_app_backend.dto.PresenceDto presenceDto) {
         messagingTemplate.convertAndSend("/topic/online-users", presenceDto);
     }
+
+    @RabbitListener(queues = RabbitMQConfig.RECEIPT_QUEUE)
+    public void receiveReceipt(com.example.chat_app_backend.dto.MessageReceiptDto receiptDto) {
+        messagingTemplate.convertAndSend("/topic/room." + receiptDto.getRoomId() + ".receipts", receiptDto);
+    }
 }
