@@ -1,18 +1,39 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MessageInput } from "./MessageInput";
-import { Menu, Users, Check, CheckCheck } from "lucide-react";
+import { Menu, Users, Check, CheckCheck, Loader2 } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
 import { useAuthStore } from "@/store/authStore";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const MessageSkeleton = () => (
+  <div className="flex animate-pulse space-x-4 mb-6">
+    <div className="rounded-full bg-zinc-800 h-10 w-10"></div>
+    <div className="flex-1 space-y-4 py-1">
+      <div className="h-4 bg-zinc-800 rounded w-1/4"></div>
+      <div className="space-y-2">
+        <div className="h-10 bg-zinc-800 rounded-2xl w-3/4"></div>
+      </div>
+    </div>
+  </div>
+);
 
 export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { onOpenSidebar: () => void; onOpenUsers: () => void; roomId?: string }) {
-  const { messages, typingUsers } = useChatStore();
+  const { messages, typingUsers, connected } = useChatStore();
   const { user } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
   const roomMessages = messages[roomId] || [];
   const roomTypingUsers = typingUsers[roomId] || [];
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Simulate initial loading state
+    if (connected) {
+      const timer = setTimeout(() => setIsLoading(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [connected]);
 
   // Filter out current user from typing indicators
   const otherTypingUsers = roomTypingUsers.filter(u => u !== user?.username);
@@ -69,60 +90,82 @@ export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { o
           <div className="text-zinc-500 italic text-center mt-10">No messages yet. Be the first to say hi!</div>
         )}
 
-        {roomMessages.map((msg, idx) => {
-          const isMe = msg.senderId === user?.username;
-          return (
-            <motion.div 
-              key={idx}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className={`flex group ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
-            >
-              <div className={`flex-shrink-0 ${isMe ? 'ml-4' : 'mr-4'}`}>
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
-                  {msg.senderId.charAt(0).toUpperCase()}
-                </div>
-              </div>
-              <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
-                <div className={`flex items-baseline mb-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <span className="font-semibold text-zinc-200">{msg.senderId}</span>
-                  <span className={`text-xs text-zinc-500 ${isMe ? 'mr-2' : 'ml-2'}`}>{msg.timestamp || 'Just now'}</span>
-                </div>
-                <div className={`px-4 py-3 rounded-2xl ${
-                  isMe 
-                    ? 'bg-indigo-600 text-white rounded-tr-sm shadow-[0_4px_15px_rgba(79,70,229,0.2)]' 
-                    : 'bg-zinc-800/80 text-zinc-200 rounded-tl-sm border border-white/5 backdrop-blur-md'
-                }`}>
-                  {msg.content}
-                </div>
-                {isMe && msg.status && (
-                  <div className="flex justify-end mt-1 text-zinc-500">
-                    {msg.status === 'SENT' && <Check className="w-3.5 h-3.5" />}
-                    {msg.status === 'DELIVERED' && <CheckCheck className="w-3.5 h-3.5" />}
-                    {msg.status === 'READ' && <CheckCheck className="w-3.5 h-3.5 text-blue-400" />}
+        {isLoading ? (
+          <>
+            <MessageSkeleton />
+            <MessageSkeleton />
+            <MessageSkeleton />
+          </>
+        ) : (
+          <AnimatePresence initial={false}>
+            {roomMessages.map((msg, idx) => {
+              const isMe = msg.senderId === user?.username;
+              return (
+                <motion.div 
+                  key={msg.id || idx}
+                  layout
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 30,
+                    layout: { duration: 0.2 }
+                  }}
+                  className={`flex group ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+                >
+                  <div className={`flex-shrink-0 ${isMe ? 'ml-4' : 'mr-4'}`}>
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
+                      {msg.senderId.charAt(0).toUpperCase()}
+                    </div>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
+                  <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
+                    <div className={`flex items-baseline mb-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <span className="font-semibold text-zinc-200">{msg.senderId}</span>
+                      <span className={`text-xs text-zinc-500 ${isMe ? 'mr-2' : 'ml-2'}`}>{msg.timestamp || 'Just now'}</span>
+                    </div>
+                    <motion.div 
+                      whileHover={{ scale: 1.01 }}
+                      className={`px-4 py-3 rounded-2xl transition-shadow duration-200 ${
+                      isMe 
+                        ? 'bg-indigo-600 text-white rounded-tr-sm shadow-[0_4px_15px_rgba(79,70,229,0.2)]' 
+                        : 'bg-zinc-800/80 text-zinc-200 rounded-tl-sm border border-white/5 backdrop-blur-md'
+                    }`}>
+                      {msg.content}
+                    </motion.div>
+                    {isMe && msg.status && (
+                      <div className="flex justify-end mt-1 text-zinc-500">
+                        {msg.status === 'SENT' && <Check className="w-3.5 h-3.5" />}
+                        {msg.status === 'DELIVERED' && <CheckCheck className="w-3.5 h-3.5" />}
+                        {msg.status === 'READ' && <CheckCheck className="w-3.5 h-3.5 text-blue-400" />}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        )}
 
         {/* Typing Indicator */}
-        {otherTypingUsers.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center text-zinc-500 text-sm ml-14"
-          >
-            <div className="flex space-x-1 mr-2">
-              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-            </div>
-            {otherTypingUsers.join(', ')} {otherTypingUsers.length === 1 ? 'is' : 'are'} typing...
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {otherTypingUsers.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.1 } }}
+              className="flex items-center text-zinc-500 text-sm ml-14 bg-zinc-800/30 w-fit px-3 py-1.5 rounded-full border border-white/5"
+            >
+              <div className="flex space-x-1 mr-2">
+                <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+              </div>
+              <span className="font-medium">{otherTypingUsers.join(', ')}</span> 
+              <span className="ml-1">{otherTypingUsers.length === 1 ? 'is' : 'are'} typing...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <div ref={messagesEndRef} />
       </div>
