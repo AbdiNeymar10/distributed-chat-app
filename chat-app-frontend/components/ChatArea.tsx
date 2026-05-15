@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { MessageInput } from "./MessageInput";
-import { Menu, Users } from "lucide-react";
+import { Menu, Users, Check, CheckCheck } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect, useRef } from "react";
@@ -96,6 +96,13 @@ export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { o
                 }`}>
                   {msg.content}
                 </div>
+                {isMe && msg.status && (
+                  <div className="flex justify-end mt-1 text-zinc-500">
+                    {msg.status === 'SENT' && <Check className="w-3.5 h-3.5" />}
+                    {msg.status === 'DELIVERED' && <CheckCheck className="w-3.5 h-3.5" />}
+                    {msg.status === 'READ' && <CheckCheck className="w-3.5 h-3.5 text-blue-400" />}
+                  </div>
+                )}
               </div>
             </motion.div>
           );

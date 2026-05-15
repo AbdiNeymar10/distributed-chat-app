@@ -2,12 +2,22 @@ import { create } from 'zustand';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useAuthStore } from './authStore';
+import api from '../lib/axios';
 
 export interface MessageDto {
+  id?: string;
   senderId: string;
   roomId: string;
   content: string;
   timestamp?: string;
+  status?: string;
+}
+
+export interface MessageReceiptDto {
+  messageId: string;
+  roomId: string;
+  userId: string;
+  status: string;
 }
 
 export interface TypingDto {
@@ -31,6 +41,7 @@ interface ChatState {
   disconnect: () => void;
   sendMessage: (roomId: string, content: string) => void;
   sendTyping: (roomId: string, typing: boolean) => void;
+  fetchMessages: (roomId: string) => Promise<void>;
   subscribeToRoom: (roomId: string) => void;
   unsubscribeFromRoom: (roomId: string) => void;
 }
@@ -131,20 +142,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  fetchMessages: async (roomId) => {
+    try {
+      const response = await api.get(`/messages/${roomId}`);
+      const fetchedMessages: MessageDto[] = response.data;
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [roomId]: fetchedMessages
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    }
+  },
+
   subscribeToRoom: (roomId) => {
     const { stompClient, connected } = get();
     if (!stompClient || !connected) return;
+
+    // Fetch missed/history messages
+    get().fetchMessages(roomId);
 
     // Subscribe to messages
     stompClient.subscribe(`/topic/room.${roomId}`, (message) => {
       if (message.body) {
         const msg: MessageDto = JSON.parse(message.body);
-        set((state) => ({
-          messages: {
-            ...state.messages,
-            [roomId]: [...(state.messages[roomId] || []), msg]
+        set((state) => {
+          const currentRoomMsgs = state.messages[roomId] || [];
+          // Avoid duplicates if message is already in history
+          if (msg.id && currentRoomMsgs.some(m => m.id === msg.id)) {
+            return state;
           }
-        }));
+          return {
+            messages: {
+              ...state.messages,
+              [roomId]: [...currentRoomMsgs, msg]
+            }
+          };
+        });
         // Send read receipt for incoming message
         stompClient.publish({
           destination: '/app/read',
@@ -157,6 +193,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
     stompClient.publish({
       destination: '/app/read',
       body: JSON.stringify({ roomId })
+    });
+
+    // Send delivery receipt to mark anything SENT as DELIVERED
+    stompClient.publish({
+      destination: '/app/delivered',
+      body: JSON.stringify({ roomId })
+    });
+
+    // Subscribe to receipts
+    stompClient.subscribe(`/topic/room.${roomId}.receipts`, (message) => {
+      if (message.body) {
+        const receipt: MessageReceiptDto = JSON.parse(message.body);
+        set((state) => {
+          const currentRoomMsgs = state.messages[roomId] || [];
+          const updatedMsgs = currentRoomMsgs.map(msg => {
+            if (msg.id === receipt.messageId) {
+              // Only upgrade status if it's "better" (READ > DELIVERED > SENT)
+              // For simplicity, we assume we just overwrite if it's from the backend
+              return { ...msg, status: receipt.status };
+            }
+            return msg;
+          });
+          return {
+            messages: {
+              ...state.messages,
+              [roomId]: updatedMsgs
+            }
+          };
+        });
+      }
     });
 
     // Subscribe to typing indicators
