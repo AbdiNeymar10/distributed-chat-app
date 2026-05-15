@@ -1,10 +1,12 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { MessageSquare, Hash, Settings, Plus, X } from "lucide-react";
+import { MessageSquare, Hash, Settings, Plus, X, LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { user, logout } = useAuthStore();
   // Use  media query to handle initial state, but Framer Motion deals with it well
   const [isMobile, setIsMobile] = useState(false);
 
@@ -126,21 +128,51 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           </div>
         </div>
 
-        <div className="p-4 border-t border-white/5 bg-black/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-fuchsia-500 to-pink-500" />
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-zinc-900 bg-emerald-500" />
+        <div className="p-4 border-t border-white/5 bg-black/20 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <motion.div 
+              whileHover={{ x: 2 }}
+              className="flex items-center gap-3 min-w-0"
+            >
+              <div className="relative shrink-0">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr from-fuchsia-600 to-pink-600 flex items-center justify-center text-white font-bold shadow-lg shadow-fuchsia-500/20`}>
+                  {user?.username.charAt(0).toUpperCase() || <UserIcon className="w-5 h-5" />}
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-zinc-900 bg-emerald-500" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-zinc-100">You</span>
-                <span className="text-xs text-zinc-500">#0001</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-bold text-zinc-100 truncate">
+                  {user?.username || 'Guest'}
+                </span>
+                <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider truncate">
+                  Online
+                </span>
               </div>
+            </motion.div>
+            
+            <div className="flex items-center gap-1">
+              <motion.button 
+                whileHover={{ scale: 1.1, rotate: 15 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
+              >
+                <Settings className="w-4.5 h-4.5" />
+              </motion.button>
+              
+              <motion.button 
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to logout?')) {
+                    logout();
+                  }
+                }}
+                whileHover={{ scale: 1.1, x: 2 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-2 rounded-xl hover:bg-rose-500/10 text-zinc-400 hover:text-rose-400 transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-4.5 h-4.5" />
+              </motion.button>
             </div>
-            <button className="p-2 rounded-xl hover:bg-white/10 text-zinc-400 hover:text-zinc-100 transition-colors">
-              <Settings className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </motion.div>
