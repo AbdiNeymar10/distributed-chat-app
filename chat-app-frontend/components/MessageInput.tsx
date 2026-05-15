@@ -5,9 +5,10 @@ import { Send, Paperclip, Smile, Image as ImageIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useChatStore } from "@/store/chatStore";
 
-export function MessageInput({ roomId = "general" }: { roomId?: string }) {
+export function MessageInput() {
   const [message, setMessage] = useState("");
-  const { sendMessage, sendTyping } = useChatStore();
+  const { sendMessage, sendTyping, activeRoomId } = useChatStore();
+  const roomId = activeRoomId || "general";
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +84,7 @@ export function MessageInput({ roomId = "general" }: { roomId?: string }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
-            disabled={!message.trim()}
+            disabled={!message.trim() || !activeRoomId}
             className={`ml-2 p-2.5 rounded-xl flex items-center justify-center transition-colors ${
               message.trim() 
                 ? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
