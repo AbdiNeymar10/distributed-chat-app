@@ -12,6 +12,24 @@ export function ChatLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
 
+  // Initialize sidebars based on screen size
+  useEffect(() => {
+    const handleInitialLayout = () => {
+      const width = window.innerWidth;
+      if (width >= 1280) {
+        setIsSidebarOpen(true);
+        setIsUsersOpen(true);
+      } else if (width >= 768) {
+        setIsSidebarOpen(true);
+        setIsUsersOpen(false);
+      } else {
+        setIsSidebarOpen(false);
+        setIsUsersOpen(false);
+      }
+    };
+    handleInitialLayout();
+  }, []);
+
   const { connected, connect, disconnect, subscribeToRoom } = useChatStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -48,6 +66,8 @@ export function ChatLayout() {
         <ChatArea 
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onOpenUsers={() => setIsUsersOpen(true)}
+          isSidebarOpen={isSidebarOpen}
+          isUsersOpen={isUsersOpen}
         />
         
         <OnlineUsers 

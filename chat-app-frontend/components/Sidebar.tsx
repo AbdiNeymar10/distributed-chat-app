@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { MessageSquare, Hash, Settings, Plus } from "lucide-react";
+import { MessageSquare, Hash, Settings, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -17,7 +17,9 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
   const sidebarVariants: Variants = {
     open: { 
+      width: "var(--sidebar-width, 288px)",
       x: 0,
+      opacity: 1,
       transition: {
         type: "spring", stiffness: 300, damping: 30,
         staggerChildren: 0.05,
@@ -25,7 +27,9 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       }
     },
     closed: { 
-      x: isMobile ? "-100%" : 0,
+      width: 0,
+      x: isMobile ? "-100%" : -20,
+      opacity: isMobile ? 1 : 0,
       transition: {
         type: "spring", stiffness: 300, damping: 30
       }
@@ -52,15 +56,24 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         initial="closed"
         animate={isOpen ? "open" : "closed"}
         variants={sidebarVariants}
-        className="fixed inset-y-0 left-0 z-50 flex w-64 md:w-72 flex-col bg-zinc-900/60 backdrop-blur-2xl border-r border-white/5 md:static md:translate-x-0"
+        className="fixed md:relative inset-y-0 left-0 z-50 flex flex-col bg-zinc-900/60 backdrop-blur-2xl border-r border-white/5 overflow-hidden"
+        style={{ "--sidebar-width": isMobile ? "85vw" : "288px" } as any}
       >
-        <div className="flex items-center h-16 px-5 border-b border-white/5 shadow-sm">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
-            <MessageSquare className="w-5 h-5 text-white" />
+        <div className="flex items-center justify-between h-16 px-5 border-b border-white/5 shadow-sm shrink-0">
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+              <MessageSquare className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+              Nexus Chat
+            </span>
           </div>
-          <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-            Nexus Chat
-          </span>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 md:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto py-5 px-3 space-y-8">

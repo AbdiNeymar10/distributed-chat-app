@@ -19,7 +19,19 @@ const MessageSkeleton = () => (
   </div>
 );
 
-export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { onOpenSidebar: () => void; onOpenUsers: () => void; roomId?: string }) {
+export function ChatArea({ 
+  onOpenSidebar, 
+  onOpenUsers, 
+  isSidebarOpen, 
+  isUsersOpen, 
+  roomId = "general" 
+}: { 
+  onOpenSidebar: () => void; 
+  onOpenUsers: () => void; 
+  isSidebarOpen: boolean;
+  isUsersOpen: boolean;
+  roomId?: string 
+}) {
   const { messages, typingUsers, connected } = useChatStore();
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
@@ -49,30 +61,34 @@ export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { o
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-4 md:px-6 border-b border-white/5 bg-zinc-950/50 backdrop-blur-md z-10">
-        <div className="flex items-center">
-          <button 
-            onClick={onOpenSidebar}
-            className="mr-4 p-2 -ml-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 md:hidden"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="flex flex-col">
-            <h2 className="font-bold text-zinc-100 flex items-center">
-              <span className="text-zinc-500 mr-1">#</span> general
+      <div className="flex items-center justify-between h-16 px-4 md:px-6 border-b border-white/5 bg-zinc-950/50 backdrop-blur-md z-10 shrink-0">
+        <div className="flex items-center min-w-0">
+          {!isSidebarOpen && (
+            <button 
+              onClick={onOpenSidebar}
+              className="mr-4 p-2 -ml-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
+          <div className="flex flex-col min-w-0">
+            <h2 className="font-bold text-zinc-100 flex items-center truncate">
+              <span className="text-zinc-500 mr-1">#</span> {roomId}
             </h2>
-            <span className="text-xs text-zinc-500 font-medium hidden sm:block">
+            <span className="text-xs text-zinc-500 font-medium hidden sm:block truncate">
               General discussion for the entire team
             </span>
           </div>
         </div>
 
-        <button 
-          onClick={onOpenUsers}
-          className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 lg:hidden"
-        >
-          <Users className="w-5 h-5" />
-        </button>
+        {!isUsersOpen && (
+          <button 
+            onClick={onOpenUsers}
+            className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5"
+          >
+            <Users className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -114,12 +130,12 @@ export function ChatArea({ onOpenSidebar, onOpenUsers, roomId = "general" }: { o
                   }}
                   className={`flex group ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  <div className={`flex-shrink-0 ${isMe ? 'ml-4' : 'mr-4'}`}>
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
+                  <div className={`flex-shrink-0 ${isMe ? 'ml-3 md:ml-4' : 'mr-3 md:mr-4'}`}>
+                    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg flex items-center justify-center text-white font-bold text-xs md:text-sm`}>
                       {msg.senderId.charAt(0).toUpperCase()}
                     </div>
                   </div>
-                  <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
+                  <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
                     <div className={`flex items-baseline mb-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                       <span className="font-semibold text-zinc-200">{msg.senderId}</span>
                       <span className={`text-xs text-zinc-500 ${isMe ? 'mr-2' : 'ml-2'}`}>{msg.timestamp || 'Just now'}</span>

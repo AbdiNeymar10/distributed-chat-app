@@ -1,11 +1,20 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { Users } from "lucide-react";
+import { Users, X } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
+import { useState, useEffect } from "react";
 
 export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { onlineUsers } = useChatStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const categories = [
     {
@@ -21,7 +30,9 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 
   const sidebarVariants: Variants = {
     open: { 
+      width: "var(--users-width, 256px)",
       x: 0,
+      opacity: 1,
       transition: {
         type: "spring", stiffness: 300, damping: 30,
         staggerChildren: 0.05,
@@ -29,7 +40,9 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
       }
     },
     closed: { 
-      x: "100%",
+      width: 0,
+      x: isMobile ? "100%" : 20,
+      opacity: isMobile ? 1 : 0,
       transition: {
         type: "spring", stiffness: 300, damping: 30
       }
@@ -56,12 +69,20 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         initial="closed"
         animate={isOpen ? "open" : "closed"}
         variants={sidebarVariants}
-        className="fixed inset-y-0 right-0 z-50 flex w-64 flex-col bg-zinc-900/60 backdrop-blur-2xl border-l border-white/5 lg:static lg:translate-x-0"
-        style={{ x: "0%" }} // Override framer-motion for desktop via CSS/JS logic in a real app, but we will use conditional rendering in layout or let framer motion handle it
+        className="fixed lg:relative inset-y-0 right-0 z-50 flex flex-col bg-zinc-900/60 backdrop-blur-2xl border-l border-white/5 overflow-hidden"
+        style={{ "--users-width": isMobile ? "85vw" : "256px" } as any}
       >
-        <div className="flex items-center h-16 px-5 border-b border-white/5 shadow-sm">
-          <Users className="w-5 h-5 text-zinc-400 mr-3" />
-          <span className="font-semibold text-zinc-100">Members</span>
+        <div className="flex items-center justify-between h-16 px-5 border-b border-white/5 shadow-sm shrink-0">
+          <div className="flex items-center">
+            <Users className="w-5 h-5 text-zinc-400 mr-3" />
+            <span className="font-semibold text-zinc-100">Members</span>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 lg:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto py-5 px-4 space-y-6">
