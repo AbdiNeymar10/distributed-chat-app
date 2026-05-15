@@ -23,29 +23,32 @@ export function ChatArea({
   onOpenSidebar, 
   onOpenUsers, 
   isSidebarOpen, 
-  isUsersOpen, 
-  roomId = "general" 
+  isUsersOpen 
 }: { 
   onOpenSidebar: () => void; 
   onOpenUsers: () => void; 
   isSidebarOpen: boolean;
   isUsersOpen: boolean;
-  roomId?: string 
 }) {
-  const { messages, typingUsers, connected } = useChatStore();
+  const { messages, typingUsers, connected, activeRoomId, userRooms } = useChatStore();
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
+  
+  const activeRoom = userRooms.find(r => r.id === activeRoomId);
+  const roomId = activeRoomId || "general";
+  
   const roomMessages = messages[roomId] || [];
   const roomTypingUsers = typingUsers[roomId] || [];
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Simulate initial loading state
-    if (connected) {
+    // Reset loading when room changes
+    setIsLoading(true);
+    if (connected && activeRoomId) {
       const timer = setTimeout(() => setIsLoading(false), 800);
       return () => clearTimeout(timer);
     }
-  }, [connected]);
+  }, [connected, activeRoomId]);
 
   // Filter out current user from typing indicators
   const otherTypingUsers = roomTypingUsers.filter(u => u !== user?.username);
@@ -73,7 +76,7 @@ export function ChatArea({
           )}
           <div className="flex flex-col min-w-0">
             <h2 className="font-bold text-zinc-100 flex items-center truncate">
-              <span className="text-zinc-500 mr-1">#</span> {roomId}
+              <span className="text-zinc-500 mr-1">#</span> {activeRoom?.name || 'select-a-channel'}
             </h2>
             <span className="text-xs text-zinc-500 font-medium hidden sm:block truncate">
               General discussion for the entire team
@@ -98,8 +101,8 @@ export function ChatArea({
           <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-4">
             <span className="text-3xl font-bold text-indigo-400">#</span>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to #general!</h1>
-          <p className="text-zinc-400">This is the start of the #general channel.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome to #{activeRoom?.name || 'channel'}!</h1>
+          <p className="text-zinc-400">This is the start of the #{activeRoom?.name || 'channel'} channel.</p>
         </div>
 
         {roomMessages.length === 0 && (
