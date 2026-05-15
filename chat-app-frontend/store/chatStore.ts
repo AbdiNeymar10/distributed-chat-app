@@ -3,6 +3,9 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useAuthStore } from './authStore';
 import api from '../lib/axios';
+import { showNotification } from '../components/FloatingNotification';
+import { UserPlus, MessageCircle } from 'lucide-react';
+import React from 'react';
 
 export interface MessageDto {
   id?: string;
@@ -80,10 +83,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
       client.subscribe('/topic/online-users', (message) => {
         if (message.body) {
           const presence: PresenceDto = JSON.parse(message.body);
+          const { user } = useAuthStore.getState();
+          if (!user) return;
+          
           set((state) => {
             const currentOnline = new Set(state.onlineUsers);
             if (presence.online) {
               currentOnline.add(presence.username);
+              // Notify when a user joins, if it's not the current user
+              if (presence.username !== user.username) {
+                showNotification(
+                  "User Online", 
+                  `${presence.username} has joined the chat`,
+                  React.createElement(UserPlus, { className: "w-5 h-5" })
+                );
+              }
             } else {
               currentOnline.delete(presence.username);
             }
@@ -159,7 +173,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   subscribeToRoom: (roomId) => {
     const { stompClient, connected } = get();
-    if (!stompClient || !connected) return;
+    const { user } = useAuthStore.getState();
+    if (!stompClient || !connected || !user) return;
 
     // Fetch missed/history messages
     get().fetchMessages(roomId);
@@ -174,6 +189,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
           if (msg.id && currentRoomMsgs.some(m => m.id === msg.id)) {
             return state;
           }
+          // Notify if message is from someone else
+          if (msg.senderId !== user.username) {
+            showNotification(
+              `New message in #${roomId}`,
+              `${msg.senderId}: ${msg.content.substring(0, 50)}${msg.content.length > 50 ? '...' : ''}`,
+              React.createElement(MessageCircle, { className: "w-5 h-5" })
+            );
+          }
+
           return {
             messages: {
               ...state.messages,

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Users } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
 
@@ -19,6 +19,28 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
     }
   ];
 
+  const sidebarVariants: Variants = {
+    open: { 
+      x: 0,
+      transition: {
+        type: "spring", stiffness: 300, damping: 30,
+        staggerChildren: 0.05,
+        delayChildren: 0.1,
+      }
+    },
+    closed: { 
+      x: "100%",
+      transition: {
+        type: "spring", stiffness: 300, damping: 30
+      }
+    },
+  };
+
+  const itemVariants: Variants = {
+    open: { opacity: 1, x: 0 },
+    closed: { opacity: 0, x: 10 },
+  };
+
   return (
     <>
       {/* Mobile Backdrop for right sidebar */}
@@ -31,9 +53,9 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 
       {/* Online Users Sidebar */}
       <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: isOpen ? 0 : "100%" }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        initial="closed"
+        animate={isOpen ? "open" : "closed"}
+        variants={sidebarVariants}
         className="fixed inset-y-0 right-0 z-50 flex w-64 flex-col bg-zinc-900/60 backdrop-blur-2xl border-l border-white/5 lg:static lg:translate-x-0"
         style={{ x: "0%" }} // Override framer-motion for desktop via CSS/JS logic in a real app, but we will use conditional rendering in layout or let framer motion handle it
       >
@@ -50,9 +72,12 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
               </div>
               <div className="space-y-1">
                 {category.users.map((user) => (
-                  <button
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                    whileTap={{ scale: 0.98 }}
                     key={user.name}
-                    className="flex w-full items-center px-2 py-2 text-sm text-zinc-400 rounded-xl hover:bg-white/5 hover:text-zinc-100 transition-all group"
+                    className="flex w-full items-center px-2 py-2 text-sm text-zinc-400 rounded-xl transition-colors group"
                   >
                     <div className="relative mr-3">
                       <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${user.avatar} opacity-80 group-hover:opacity-100 transition-opacity`} />
@@ -62,7 +87,7 @@ export function OnlineUsers({ isOpen, onClose }: { isOpen: boolean; onClose: () 
                       <span className="font-medium text-zinc-200 group-hover:text-white">{user.name}</span>
                       <span className="text-[10px] text-zinc-500 group-hover:text-zinc-400">{user.role}</span>
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
