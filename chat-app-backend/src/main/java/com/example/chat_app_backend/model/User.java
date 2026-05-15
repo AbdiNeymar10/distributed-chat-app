@@ -32,6 +32,7 @@ public class User {
     private String email;
 
     @ManyToMany(mappedBy = "members")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Set<Room> rooms = new HashSet<>();
 
     @Column(name = "created_at", updatable = false)
