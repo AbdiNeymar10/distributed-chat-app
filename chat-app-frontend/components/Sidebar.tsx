@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { MessageSquare, Hash, Settings, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -15,9 +15,26 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const sidebarVariants = {
-    open: { x: 0 },
-    closed: { x: isMobile ? "-100%" : 0 },
+  const sidebarVariants: Variants = {
+    open: { 
+      x: 0,
+      transition: {
+        type: "spring", stiffness: 300, damping: 30,
+        staggerChildren: 0.05,
+        delayChildren: 0.1,
+      }
+    },
+    closed: { 
+      x: isMobile ? "-100%" : 0,
+      transition: {
+        type: "spring", stiffness: 300, damping: 30
+      }
+    },
+  };
+
+  const itemVariants: Variants = {
+    open: { opacity: 1, x: 0 },
+    closed: { opacity: 0, x: -10 },
   };
 
   return (
@@ -35,7 +52,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         initial="closed"
         animate={isOpen ? "open" : "closed"}
         variants={sidebarVariants}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="fixed inset-y-0 left-0 z-50 flex w-64 md:w-72 flex-col bg-zinc-900/60 backdrop-blur-2xl border-r border-white/5 md:static md:translate-x-0"
       >
         <div className="flex items-center h-16 px-5 border-b border-white/5 shadow-sm">
@@ -54,13 +70,16 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </div>
             <div className="space-y-1">
               {['general', 'random', 'tech-talk', 'memes'].map((channel, i) => (
-                <button
+                <motion.button
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                  whileTap={{ scale: 0.98 }}
                   key={channel}
-                  className={`flex w-full items-center px-3 py-2 text-sm rounded-xl transition-all group ${i === 0 ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'}`}
+                  className={`flex w-full items-center px-3 py-2 text-sm rounded-xl transition-colors group ${i === 0 ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-zinc-100'}`}
                 >
                   <Hash className={`w-4 h-4 mr-3 ${i === 0 ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
                   {channel}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -76,16 +95,19 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 { name: "Bob", status: "bg-amber-500", avatar: "from-rose-400 to-orange-500" },
                 { name: "Charlie", status: "bg-zinc-500", avatar: "from-blue-500 to-cyan-500" }
               ].map((user) => (
-                <button
+                <motion.button
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                  whileTap={{ scale: 0.98 }}
                   key={user.name}
-                  className="flex w-full items-center px-3 py-2 text-sm text-zinc-400 rounded-xl hover:bg-white/5 hover:text-zinc-100 transition-all"
+                  className="flex w-full items-center px-3 py-2 text-sm text-zinc-400 rounded-xl hover:text-zinc-100 transition-colors"
                 >
                   <div className="relative mr-3">
                     <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${user.avatar}`} />
                     <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-zinc-900 ${user.status}`} />
                   </div>
                   {user.name}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
