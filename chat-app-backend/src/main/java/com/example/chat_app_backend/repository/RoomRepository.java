@@ -11,4 +11,5 @@ import java.util.Optional;
 @Repository
 public interface RoomRepository extends JpaRepository<Room, UUID> {
     Optional<Room> findByName(String name);
+    java.util.List<Room> findAllByMembersUsername(String username);
 }
