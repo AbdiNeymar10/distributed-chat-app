@@ -24,6 +24,9 @@ public class RabbitMQConfig {
     public static final String PRESENCE_QUEUE = "presence.queue.durable";
     public static final String PRESENCE_ROUTING_KEY = "presence.routing.#";
 
+    public static final String RECEIPT_QUEUE = "receipt.queue.durable";
+    public static final String RECEIPT_ROUTING_KEY = "receipt.routing.#";
+
     @Bean
     public Queue chatQueue() {
         return new Queue(CHAT_QUEUE, true);
@@ -37,6 +40,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue presenceQueue() {
         return new Queue(PRESENCE_QUEUE, true);
+    }
+
+    @Bean
+    public Queue receiptQueue() {
+        return new Queue(RECEIPT_QUEUE, true);
     }
 
     @Bean
@@ -57,6 +65,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding presenceBinding(Queue presenceQueue, TopicExchange exchange) {
         return BindingBuilder.bind(presenceQueue).to(exchange).with(PRESENCE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding receiptBinding(Queue receiptQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(receiptQueue).to(exchange).with(RECEIPT_ROUTING_KEY);
     }
 
     @Bean
