@@ -11,8 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageDto {
+    private String id;
     private String senderId; // Should be username or UUID string, we can keep as String
     private String roomId;
     private String content;
     private LocalDateTime timestamp;
+    private String status; // SENT, DELIVERED, READ
 }
