@@ -24,12 +24,12 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     return () => window.removeEventListener("resize", handleResize);
   }, [fetchUserRooms]);
 
-  const filteredRooms = (userRooms || []).filter(room => 
+  const filteredRooms = (userRooms || []).filter(room =>
     room?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const sidebarVariants: Variants = {
-    open: { 
+    open: {
       width: "var(--sidebar-width, 288px)",
       x: 0,
       opacity: 1,
@@ -39,7 +39,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         delayChildren: 0.1,
       }
     },
-    closed: { 
+    closed: {
       width: 0,
       x: isMobile ? "-100%" : -20,
       opacity: isMobile ? 1 : 0,
@@ -78,10 +78,10 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-              Nexus Chat
+              Distributed Chat App
             </span>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 md:hidden"
           >
@@ -92,7 +92,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         <div className="px-4 mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-            <input 
+            <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -107,14 +107,14 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <div className="flex items-center justify-between text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 px-3">
               <span>Channels</span>
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => setIsJoinModalOpen(true)}
                   title="Discover"
                   className="p-1 rounded-lg text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
                 >
                   <Compass className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => setIsCreateModalOpen(true)}
                   title="Create"
                   className="p-1 rounded-lg text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
@@ -142,7 +142,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     className={`flex w-full items-center px-3 py-2 text-sm rounded-xl transition-all duration-200 group relative ${activeRoomId === room.id ? 'bg-indigo-500/10 text-indigo-400 font-bold' : 'text-zinc-400 hover:text-zinc-100'}`}
                   >
                     {activeRoomId === room.id && (
-                      <motion.div 
+                      <motion.div
                         layoutId="active-pill"
                         className="absolute left-0 w-1 h-5 bg-indigo-500 rounded-r-full"
                       />
@@ -154,7 +154,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               </AnimatePresence>
               {filteredRooms.length === 0 && (
                 <div className="px-3 py-4 text-center border border-dashed border-white/5 rounded-2xl">
-                   <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-widest">No channels found</p>
+                  <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-widest">No channels found</p>
                 </div>
               )}
             </div>
@@ -191,7 +191,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
         <div className="p-4 border-t border-white/5 bg-black/20 shrink-0">
           <div className="flex items-center justify-between gap-2">
-            <motion.div 
+            <motion.div
               whileHover={{ x: 2 }}
               className="flex items-center gap-3 min-w-0"
             >
@@ -210,17 +210,17 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 </span>
               </div>
             </motion.div>
-            
+
             <div className="flex items-center gap-1">
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.1, rotate: 15 }}
                 whileTap={{ scale: 0.9 }}
                 className="p-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
               >
                 <Settings className="w-4.5 h-4.5" />
               </motion.button>
-              
-              <motion.button 
+
+              <motion.button
                 onClick={() => {
                   if (window.confirm('Are you sure you want to logout?')) {
                     logout();

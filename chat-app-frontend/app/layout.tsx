@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus Chat App",
-  description: "Nexus Chat Application",
+  title: "Distributed Chat App",
+  description: "Distributed Chat Application",
 };
 
 export default function RootLayout({
