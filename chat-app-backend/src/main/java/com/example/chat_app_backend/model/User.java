@@ -31,6 +31,10 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    private boolean online = false;
+
     @ManyToMany(mappedBy = "members")
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Set<Room> rooms = new HashSet<>();
