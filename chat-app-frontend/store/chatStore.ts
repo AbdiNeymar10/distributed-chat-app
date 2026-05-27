@@ -62,6 +62,7 @@ interface ChatState {
   subscribeToRoom: (roomId: string) => void;
   unsubscribeFromRoom: (roomId: string) => void;
   setActiveRoomId: (roomId: string | null) => void;
+  fetchOnlineUsers: () => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -74,6 +75,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   allRooms: [],
   activeRoomId: null,
   roomSubscriptions: {},
+
+  fetchOnlineUsers: async () => {
+    try {
+      const response = await api.get('/users/online');
+      set({ onlineUsers: Array.isArray(response.data) ? response.data : [] });
+    } catch (error) {
+      console.error('Failed to fetch online users:', error);
+      set({ onlineUsers: [] });
+    }
+  },
 
   connect: () => {
     const { token, user } = useAuthStore.getState();
@@ -97,6 +108,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     client.onConnect = (frame) => {
       set({ connected: true });
+      get().fetchOnlineUsers();
       
       // Subscribe to global online-users
       client.subscribe('/topic/online-users', (message) => {

@@ -10,7 +10,7 @@ import { JoinRoomModal } from "./JoinRoomModal";
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user, logout } = useAuthStore();
-  const { userRooms, activeRoomId, setActiveRoomId, fetchUserRooms } = useChatStore();
+  const { userRooms, activeRoomId, setActiveRoomId, fetchUserRooms, onlineUsers } = useChatStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -162,29 +162,46 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
           <div>
             <div className="flex items-center justify-between text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 px-3">
-              <span>Direct Messages</span>
-              <Plus className="w-4 h-4 cursor-pointer hover:text-zinc-300" />
+              <span>Online</span>
             </div>
             <div className="space-y-1">
-              {[
-                { name: "Alice", status: "bg-emerald-500", avatar: "from-indigo-500 to-purple-600" },
-                { name: "Bob", status: "bg-amber-500", avatar: "from-rose-400 to-orange-500" },
-                { name: "Charlie", status: "bg-zinc-500", avatar: "from-blue-500 to-cyan-500" }
-              ].map((user) => (
-                <motion.button
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
-                  whileTap={{ scale: 0.98 }}
-                  key={user.name}
-                  className="flex w-full items-center px-3 py-2 text-sm text-zinc-400 rounded-xl hover:text-zinc-100 transition-colors"
-                >
-                  <div className="relative mr-3">
-                    <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${user.avatar}`} />
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-zinc-900 ${user.status}`} />
-                  </div>
-                  {user.name}
-                </motion.button>
-              ))}
+              {onlineUsers
+                .filter((username) => username !== user?.username)
+                .map((username) => {
+                  // Generate a deterministic gradient avatar based on username
+                  const colors = [
+                    "from-indigo-500 to-purple-600",
+                    "from-rose-400 to-orange-500",
+                    "from-blue-500 to-cyan-500",
+                    "from-emerald-400 to-teal-600",
+                    "from-fuchsia-500 to-pink-600",
+                    "from-amber-400 to-red-500",
+                  ];
+                  const charCodeSum = username.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                  const avatarColor = colors[charCodeSum % colors.length];
+
+                  return (
+                    <motion.div
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                      key={username}
+                      className="flex w-full items-center px-3 py-2 text-sm text-zinc-400 rounded-xl transition-colors"
+                    >
+                      <div className="relative mr-3">
+                        <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${avatarColor} flex items-center justify-center text-[10px] text-white font-bold uppercase`}>
+                          {username.charAt(0)}
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-zinc-900 bg-emerald-500" />
+                      </div>
+                      <span className="truncate">{username}</span>
+                    </motion.div>
+                  );
+                })}
+              {onlineUsers.filter((username) => username !== user?.username).length === 0 && (
+                <div className="px-3 py-4 text-center border border-dashed border-white/5 rounded-2xl">
+                  <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-widest">No users online</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
