@@ -2,6 +2,7 @@ package com.example.chat_app_backend.websocket;
 
 import com.example.chat_app_backend.dto.PresenceDto;
 import com.example.chat_app_backend.rabbitmq.MessagePublisher;
+import com.example.chat_app_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -16,6 +17,7 @@ import java.security.Principal;
 public class WebSocketEventListener {
 
     private final MessagePublisher messagePublisher;
+    private final UserService userService;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -23,6 +25,8 @@ public class WebSocketEventListener {
         Principal user = headerAccessor.getUser();
         if (user != null) {
             String username = user.getName();
+            userService.setUserOnlineStatus(username, true);
+            
             PresenceDto presenceDto = PresenceDto.builder()
                     .username(username)
                     .online(true)
@@ -37,6 +41,8 @@ public class WebSocketEventListener {
         Principal user = headerAccessor.getUser();
         if (user != null) {
             String username = user.getName();
+            userService.setUserOnlineStatus(username, false);
+            
             PresenceDto presenceDto = PresenceDto.builder()
                     .username(username)
                     .online(false)
