@@ -2,18 +2,19 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageInput } from "./MessageInput";
-import { Menu, Users, Check, CheckCheck, Loader2 } from "lucide-react";
+import { Menu, Users, Check, CheckCheck, Loader2, Sun, Moon } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect, useRef, useState } from "react";
+import api from "@/lib/axios";
 
 const MessageSkeleton = () => (
   <div className="flex animate-pulse space-x-4 mb-6">
-    <div className="rounded-full bg-zinc-800 h-10 w-10"></div>
+    <div className="rounded-full bg-zinc-200 dark:bg-zinc-800 h-10 w-10"></div>
     <div className="flex-1 space-y-4 py-1">
-      <div className="h-4 bg-zinc-800 rounded w-1/4"></div>
+      <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
       <div className="space-y-2">
-        <div className="h-10 bg-zinc-800 rounded-2xl w-3/4"></div>
+        <div className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-2xl w-3/4"></div>
       </div>
     </div>
   </div>
@@ -31,7 +32,36 @@ export function ChatArea({
   isUsersOpen: boolean;
 }) {
   const { messages, typingUsers, connected, activeRoomId, userRooms } = useChatStore();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
+  const theme = user?.themePreference || "dark";
+  const notifications = user?.notificationsEnabled ?? true;
+
+  const toggleTheme = async () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+
+    // Apply DOM changes immediately for instant visual feedback
+    if (newTheme === "light") {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    }
+
+    // Update the store (triggers re-renders across all components)
+    updateUser({ themePreference: newTheme });
+
+    // Persist to backend (non-blocking)
+    try {
+      await api.put("/users/profile/settings", { 
+        themePreference: newTheme, 
+        notificationsEnabled: notifications
+      });
+    } catch (error) {
+      console.error("Failed to update theme preference", error);
+    }
+  };
+
   const [isLoading, setIsLoading] = useState(true);
   
   const activeRoom = userRooms.find(r => r.id === activeRoomId);
@@ -58,55 +88,71 @@ export function ChatArea({
   }, [roomMessages, otherTypingUsers]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950/80 relative">
+    <div className="flex-1 flex flex-col h-full bg-zinc-50/50 dark:bg-zinc-950/80 relative">
       {/* Background glowing orb effect */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-4 md:px-6 border-b border-white/5 bg-zinc-950/50 backdrop-blur-md z-10 shrink-0">
+      <div className="flex items-center justify-between h-16 px-4 md:px-6 border-b border-zinc-200 dark:border-white/5 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-md z-10 shrink-0">
         <div className="flex items-center min-w-0">
           {!isSidebarOpen && (
             <button 
               onClick={onOpenSidebar}
-              className="mr-4 p-2 -ml-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5"
+              className="mr-4 p-2 -ml-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
             >
               <Menu className="w-5 h-5" />
             </button>
           )}
           <div className="flex flex-col min-w-0">
-            <h2 className="font-bold text-zinc-100 flex items-center truncate">
-              <span className="text-zinc-500 mr-1">#</span> {activeRoom?.name || 'select-a-channel'}
+            <h2 className="font-bold text-zinc-800 dark:text-zinc-100 flex items-center truncate">
+              <span className="text-zinc-400 dark:text-zinc-500 mr-1">#</span> {activeRoom?.name || 'select-a-channel'}
             </h2>
-            <span className="text-xs text-zinc-500 font-medium hidden sm:block truncate">
+            <span className="text-xs text-zinc-500 dark:text-zinc-500 font-medium hidden sm:block truncate">
               General discussion for the entire team
             </span>
           </div>
         </div>
 
-        {!isUsersOpen && (
-          <button 
-            onClick={onOpenUsers}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5"
+        <div className="flex items-center gap-1">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors"
+            title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
           >
-            <Users className="w-5 h-5" />
-          </button>
-        )}
+            {theme === "light" ? (
+              <Moon className="w-5 h-5" />
+            ) : (
+              <Sun className="w-5 h-5 text-amber-400 animate-spin-slow" />
+            )}
+          </motion.button>
+
+          {!isUsersOpen && (
+            <button 
+              onClick={onOpenUsers}
+              className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
+            >
+              <Users className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 z-10">
         {/* Welcome message */}
-        <div className="pb-8 border-b border-white/5 mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-4">
-            <span className="text-3xl font-bold text-indigo-400">#</span>
+        <div className="pb-8 border-b border-zinc-200 dark:border-white/5 mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center mb-4 border border-indigo-500/20">
+            <span className="text-3xl font-bold text-indigo-500 dark:text-indigo-400">#</span>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to #{activeRoom?.name || 'channel'}!</h1>
-          <p className="text-zinc-400">This is the start of the #{activeRoom?.name || 'channel'} channel.</p>
+          <h1 className="text-3xl font-bold text-zinc-800 dark:text-white mb-2">Welcome to #{activeRoom?.name || 'channel'}!</h1>
+          <p className="text-zinc-500 dark:text-zinc-400">This is the start of the #{activeRoom?.name || 'channel'} channel.</p>
         </div>
 
         {roomMessages.length === 0 && (
-          <div className="text-zinc-500 italic text-center mt-10">No messages yet. Be the first to say hi!</div>
+          <div className="text-zinc-400 dark:text-zinc-500 italic text-center mt-10">No messages yet. Be the first to say hi!</div>
         )}
 
         {isLoading ? (
@@ -140,23 +186,23 @@ export function ChatArea({
                   </div>
                   <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
                     <div className={`flex items-baseline mb-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                      <span className="font-semibold text-zinc-200">{msg.senderId}</span>
-                      <span className={`text-xs text-zinc-500 ${isMe ? 'mr-2' : 'ml-2'}`}>{msg.timestamp || 'Just now'}</span>
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-200">{msg.senderId}</span>
+                      <span className={`text-xs text-zinc-400 dark:text-zinc-500 ${isMe ? 'mr-2' : 'ml-2'}`}>{msg.timestamp || 'Just now'}</span>
                     </div>
                     <motion.div 
                       whileHover={{ scale: 1.01 }}
                       className={`px-4 py-3 rounded-2xl transition-shadow duration-200 ${
                       isMe 
                         ? 'bg-indigo-600 text-white rounded-tr-sm shadow-[0_4px_15px_rgba(79,70,229,0.2)]' 
-                        : 'bg-zinc-800/80 text-zinc-200 rounded-tl-sm border border-white/5 backdrop-blur-md'
+                        : 'bg-white dark:bg-zinc-800/80 text-zinc-800 dark:text-zinc-200 rounded-tl-sm border border-zinc-200 dark:border-white/5 backdrop-blur-md'
                     }`}>
                       {msg.content}
                     </motion.div>
                     {isMe && msg.status && (
-                      <div className="flex justify-end mt-1 text-zinc-500">
+                      <div className="flex justify-end mt-1 text-zinc-400 dark:text-zinc-500">
                         {msg.status === 'SENT' && <Check className="w-3.5 h-3.5" />}
                         {msg.status === 'DELIVERED' && <CheckCheck className="w-3.5 h-3.5" />}
-                        {msg.status === 'READ' && <CheckCheck className="w-3.5 h-3.5 text-blue-400" />}
+                        {msg.status === 'READ' && <CheckCheck className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />}
                       </div>
                     )}
                   </div>
@@ -173,7 +219,7 @@ export function ChatArea({
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.1 } }}
-              className="flex items-center text-zinc-500 text-sm ml-14 bg-zinc-800/30 w-fit px-3 py-1.5 rounded-full border border-white/5"
+              className="flex items-center text-zinc-500 text-sm ml-14 bg-zinc-200/50 dark:bg-zinc-800/30 w-fit px-3 py-1.5 rounded-full border border-zinc-200 dark:border-white/5"
             >
               <div className="flex space-x-1 mr-2">
                 <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />

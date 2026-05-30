@@ -48,6 +48,23 @@ export function ChatLayout() {
     }
   }, [connected, subscribeToRoom]);
 
+  const user = useAuthStore((state) => state.user);
+  const theme = user?.themePreference || "dark";
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.style.setProperty("--background", "#f4f4f5");
+      document.documentElement.style.setProperty("--foreground", "#09090b");
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.style.setProperty("--background", "#09090b");
+      document.documentElement.style.setProperty("--foreground", "#fafafa");
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
+
   return (
     <AnimatePresence mode="wait">
       <motion.div 
@@ -56,7 +73,7 @@ export function ChatLayout() {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex h-full w-full overflow-hidden bg-zinc-950 text-zinc-50 font-sans selection:bg-indigo-500/30"
+        className="flex h-full w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans selection:bg-indigo-500/30"
       >
         <Sidebar 
           isOpen={isSidebarOpen} 
