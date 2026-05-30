@@ -32,10 +32,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtils.extractUsername(jwt);
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                logger.warn("JWT token is expired: " + e.getMessage());
+            } catch (io.jsonwebtoken.security.SignatureException e) {
+                logger.warn("JWT signature validation failed: " + e.getMessage());
+            } catch (io.jsonwebtoken.MalformedJwtException e) {
+                logger.warn("JWT token is malformed: " + e.getMessage());
             } catch (Exception e) {
-                logger.error("Error extracting username from token", e);
+                logger.error("Unexpected error extracting username from token", e);
             }
         }
+
+
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(username);
