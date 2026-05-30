@@ -5,6 +5,9 @@ interface User {
   id: string;
   username: string;
   email: string;
+  avatar?: string | null;
+  themePreference?: string;
+  notificationsEnabled?: boolean;
 }
 
 interface AuthState {
@@ -13,6 +16,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   setAuth: (user: User, token: string) => void;
+  updateUser: (updatedUser: Partial<User>) => void;
   logout: () => void;
   initializeAuth: () => void;
 }
@@ -29,6 +33,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ user, token, isAuthenticated: true, isLoading: false });
   },
+  updateUser: (updatedUser) => {
+    set((state) => {
+      if (!state.user) return {};
+      const newUser = { ...state.user, ...updatedUser };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(newUser));
+      }
+      return { user: newUser };
+    });
+  },
   logout: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
@@ -43,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       
       if (token && userStr) {
         try {
-          const user = JSON.stringify(userStr) ? JSON.parse(userStr) : null;
+          const user = userStr ? JSON.parse(userStr) : null;
           if (user) {
             set({ user, token, isAuthenticated: true, isLoading: false });
             return;
