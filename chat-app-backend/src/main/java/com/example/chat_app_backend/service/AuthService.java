@@ -47,6 +47,9 @@ public class AuthService {
                         .id(user.getId())
                         .username(user.getUsername())
                         .email(user.getEmail())
+                        .avatar(user.getAvatar())
+                        .themePreference(user.getThemePreference())
+                        .notificationsEnabled(user.isNotificationsEnabled())
                         .build())
                 .build();
     }
@@ -68,6 +71,9 @@ public class AuthService {
                         .id(user.getId())
                         .username(user.getUsername())
                         .email(user.getEmail())
+                        .avatar(user.getAvatar())
+                        .themePreference(user.getThemePreference())
+                        .notificationsEnabled(user.isNotificationsEnabled())
                         .build())
                 .build();
     }
