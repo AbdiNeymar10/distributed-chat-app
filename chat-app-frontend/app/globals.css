@@ -1,6 +1,18 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
+  --background: #09090b;
+  --foreground: #fafafa;
+}
+
+.light {
+  --background: #f4f4f5;
+  --foreground: #09090b;
+}
+
+.dark {
   --background: #09090b;
   --foreground: #fafafa;
 }
@@ -35,4 +47,12 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #3f3f46;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
 }
