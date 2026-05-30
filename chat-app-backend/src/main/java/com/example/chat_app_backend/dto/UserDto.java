@@ -16,4 +16,7 @@ public class UserDto {
     private String username;
     private String email;
     private boolean online;
+    private String avatar;
+    private String themePreference;
+    private boolean notificationsEnabled;
 }

@@ -35,8 +35,20 @@ public class User {
     @Builder.Default
     private boolean online = false;
 
+    @Column(columnDefinition = "TEXT")
+    private String avatar;
+
+    @Column(name = "theme_preference", columnDefinition = "varchar(10) default 'dark'")
+    @Builder.Default
+    private String themePreference = "dark";
+
+    @Column(name = "notifications_enabled", columnDefinition = "boolean default true")
+    @Builder.Default
+    private boolean notificationsEnabled = true;
+
     @ManyToMany(mappedBy = "members")
     @com.fasterxml.jackson.annotation.JsonIgnore
+    @Builder.Default
     private Set<Room> rooms = new HashSet<>();
 
     @Column(name = "created_at", updatable = false)
