@@ -28,7 +28,7 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", { username, password });
       setAuth(
-        { id: response.data.user.id || '', username: response.data.user.username || username, email: response.data.user.email || '' }, 
+        { id: response.data.user.id || '', username: response.data.user.username || username, email: response.data.user.email || '' },
         response.data.token
       );
       toast.success("Welcome back!");
@@ -41,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthLayout title="Welcome Back" subtitle="Sign in to continue to Nexus Chat">
+    <AuthLayout title="Welcome Back" subtitle="Sign in to continue to Chat App">
       <form onSubmit={handleLogin} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-1">Username</label>
@@ -54,7 +54,7 @@ export default function LoginPage() {
             placeholder="Enter your username"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-1">Password</label>
           <motion.input

@@ -13,18 +13,24 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
       return;
     }
 
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -41,7 +47,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout title="Create Account" subtitle="Join Nexus Chat today">
+    <AuthLayout title="Create Account" subtitle="Join Chat App today">
       <form onSubmit={handleRegister} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-1">Username</label>
@@ -66,7 +72,7 @@ export default function RegisterPage() {
             placeholder="you@example.com"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-1">Password</label>
           <motion.input
@@ -76,6 +82,18 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-zinc-100"
             placeholder="Create a strong password"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-400 mb-1">Confirm Password</label>
+          <motion.input
+            whileFocus={{ scale: 1.01, borderColor: "rgba(99, 102, 241, 0.5)" }}
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-zinc-100"
+            placeholder="Confirm your password"
           />
         </div>
 
